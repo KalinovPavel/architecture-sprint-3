@@ -1,0 +1,20 @@
+@startuml
+
+!include https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+' Персона - пользователь
+Person(user, "User", "Веб-клиент, управляет отоплением и просматривает температуру")
+
+' Система - монолитное Java-приложение
+System(monolith, "Monolithic Application", "Java, PostgreSQL", "Объединяет всю логику управления отоплением и мониторинга")
+
+' Внешние устройства
+System_Ext(temperatureSensor, "Temperature Sensor", "Отправляет текущие показания температуры")
+System_Ext(heatingRelay, "Heating Relay", "Принимает команды на включение/выключение отопления")
+
+' Взаимосвязи
+Rel(user, monolith, "HTTP/HTTPS запросы (Web UI)")
+Rel(monolith, temperatureSensor, "Синхронный запрос данных о температуре")
+Rel(monolith, heatingRelay, "Синхронная команда управления отоплением")
+
+@enduml
