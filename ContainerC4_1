@@ -1,0 +1,21 @@
+@startuml
+
+!include https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(heatingService, "Heating Service") {
+
+  Component(heatingController, "HeatingController", "REST Controller", "Принимает HTTP-запросы на управление отоплением (включить/выключить, задать расписание)")
+  Component(heatingScheduler, "HeatingScheduler", "Scheduler / Service", "Управляет расписаниями, таймерами, планами отопления")
+  Component(heatingLogic, "HeatingLogic", "Business Logic", "Основная бизнес-логика работы отопления, принятие решений по температуре")
+  Component(heatingRepository, "HeatingRepository", "JPA Repository", "Доступ к данным в Heating DB (PostgreSQL)")
+  Component(kafkaConsumer, "Kafka Consumer", "Consumer", "Получает телеметрию от устройств (датчики температуры) через Kafka")
+  Component(kafkaProducer, "Kafka Producer", "Producer", "Публикует события о смене состояния отопления, алерты и т.д.")
+}
+
+Rel(heatingController, heatingLogic, "Вызовы бизнес-логики")
+Rel(heatingScheduler, heatingLogic, "Запускает расчёты и команды по расписанию")
+Rel(heatingLogic, heatingRepository, "CRUD по данным отопления (JDBC/SQL)")
+Rel(kafkaConsumer, heatingLogic, "Передаёт свежие данные о температуре")
+Rel(heatingLogic, kafkaProducer, "Отправляет события изменений состояния")
+
+@enduml
