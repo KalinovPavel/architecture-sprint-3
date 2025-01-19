@@ -1,0 +1,67 @@
+@startuml
+
+' Подключаем библиотеку C4
+!include https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_TOP_DOWN()
+
+' Внешний пользователь
+Person(user, "User", "Обычный пользователь, управляет умным домом")
+
+' Две внешние системы
+System_Ext(tempSensor, "Temperature Sensor", "Физическое устройство, передающее показания температуры")
+System_Ext(heatRelay, "Heating Relay", "Физическое устройство, получающее команды на включение/выключение отопления")
+
+' API Gateway и System Boundary
+Boundary(apiGateway, "API Gateway") {
+  System_Boundary(system, "Тёплый дом: Микросервисная система") {
+
+    Container(heatingService, "Heating Service", "Java/Spring Boot", "Управление отоплением (включение/выключение, расписания)")
+    Container(lightingService, "Lighting Service", "Java/Spring Boot", "Управление освещением (умный свет)")
+    Container(gateService, "Gate Service", "Java/Spring Boot", "Управление воротами (открытие/закрытие)")
+    Container(observationService, "Observation Service", "Java/Spring Boot", "Видео/снимки, телеметрия камер наблюдения")
+    Container(deviceManagementService, "Device Management Service", "Java/Spring Boot", "Регистрация, настройка и мониторинг любых устройств")
+    Container(userManagementService, "User Management Service", "Java/Spring Boot", "Аутентификация, авторизация, профили пользователей")
+
+    ' Шина данных / брокер сообщений
+    Container(kafka, "Kafka", "Messaging system", "Обмен событиями и телеметрией (Pub/Sub)")
+
+    ' Отдельные базы данных у каждого сервиса (опциональная схема)
+    ContainerDb(heatingDb, "Heating DB", "PostgreSQL", "Данные по отоплению")
+    ContainerDb(lightingDb, "Lighting DB", "PostgreSQL", "Данные по освещению")
+    ContainerDb(gateDb, "Gate DB", "PostgreSQL", "Данные по воротам")
+    ContainerDb(observationDb, "Observation DB", "PostgreSQL", "Данные по камерам/записям")
+    ContainerDb(deviceDb, "Device Management DB", "PostgreSQL", "Регистрация и конфигурация устройств")
+    ContainerDb(userDb, "User DB", "PostgreSQL", "Учетные записи, права доступа")
+  }
+}
+
+' Взаимодействия
+
+' 1) Пользователь -> API Gateway -> сервисы
+Rel(user, apiGateway, "REST/HTTPS", "Использует фронтенд или мобильное приложение")
+Rel(apiGateway, heatingService, "REST/HTTPS")
+Rel(apiGateway, lightingService, "REST/HTTPS")
+Rel(apiGateway, gateService, "REST/HTTPS")
+Rel(apiGateway, observationService, "REST/HTTPS")
+Rel(apiGateway, deviceManagementService, "REST/HTTPS")
+Rel(apiGateway, userManagementService, "REST/HTTPS")
+
+' 2) Каждая база данных привязана к соответствующему сервису
+Rel(heatingService, heatingDb, "JDBC/SQL")
+Rel(lightingService, lightingDb, "JDBC/SQL")
+Rel(gateService, gateDb, "JDBC/SQL")
+Rel(observationService, observationDb, "JDBC/SQL")
+Rel(deviceManagementService, deviceDb, "JDBC/SQL")
+Rel(userManagementService, userDb, "JDBC/SQL")
+
+' 3) Взаимодействие внешних устройств с Kafka (пример использования брокера)
+Rel(tempSensor, kafka, "Отправляет данные о температуре (publish telemetry)")
+Rel(kafka, heatingService, "Подписка на телеметрию (consume events)")
+Rel(heatingService, kafka, "Публикует команды/события состояния (publish)")
+
+Rel(heatRelay, kafka, "Подписывается на команды включения/выключения (consume)")
+Rel(kafka, heatRelay, "Может отправлять статусы/события (publish)")
+Rel(heatingService, kafka, "Публикует команды для реле (publish)")
+
+@enduml
