@@ -93,7 +93,9 @@
 
 **Диаграмма компонентов (Components)**
 
-Добавьте диаграмму для каждого из выделенных микросервисов.
+[Диаграмма компонента Heating Service](./ComponentC4_1.puml)
+
+[Диаграмма компонента Device Management Service](./ComponentC4_2.puml)
 
 **Диаграмма кода (Code)**
 
