@@ -1,0 +1,21 @@
+@startuml
+
+!include https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(deviceService, "Device Management Service") {
+
+  Component(deviceController, "DeviceController", "REST Controller", "Принимает HTTP-запросы для регистрации и управления устройствами")
+  Component(deviceRegistry, "DeviceRegistry", "Registry / Service", "Хранит метаданные об устройствах, статус и конфигурацию")
+  Component(deviceProvisioner, "DeviceProvisioner", "Service", "Обрабатывает первичное подключение новых устройств (активация, выдача ключей)")
+  Component(deviceRepo, "DeviceRepository", "JPA Repository", "Сохранение/чтение данных об устройствах (deviceDb)")
+  Component(kafkaConsumerDevices, "Kafka Consumer", "Consumer", "Принимает телеметрию/события от устройств")
+  Component(kafkaProducerDevices, "Kafka Producer", "Producer", "Отправляет события о подключении новых устройств, изменении статуса и т.д.")
+}
+
+Rel(deviceController, deviceRegistry, "CRUD-операции над устройствами")
+Rel(deviceRegistry, deviceRepo, "Чтение/запись данных об устройствах")
+Rel(deviceProvisioner, deviceRepo, "Создание записей при подключении")
+Rel(kafkaConsumerDevices, deviceRegistry, "Обновление статуса устройства на основании телеметрии")
+Rel(deviceRegistry, kafkaProducerDevices, "Публикует события изменений/состояния устройства")
+
+@enduml
