@@ -1,0 +1,94 @@
+@startuml
+
+!define ER_COLOR #LightBlue
+
+skinparam entity {
+  BackgroundColor ER_COLOR
+  BorderColor black
+  FontSize 11
+}
+
+' ---------- Сущность: User ----------
+' Хранит данные о пользователях (учётные записи)
+entity "User" as user {
+  + user_id : UUID [PK]
+  --
+  username : String
+  email : String
+  password_hash : String
+  created_at : DateTime
+}
+
+' ---------- Сущность: House ----------
+' Представляет конкретный дом (или квартиру), в котором установлена система умного дома
+entity "House" as house {
+  + house_id : UUID [PK]
+  --
+  user_id : UUID [FK -> user.user_id]
+  address : String
+  name : String
+  created_at : DateTime
+}
+
+' ---------- Сущность: Module ----------
+' «Логический модуль» системы (например, Heating / Lighting / Security / Observation)
+' Пользователь может «подключать» эти модули к своему дому, а внутри модуля — несколько устройств
+entity "Module" as module {
+  + module_id : UUID [PK]
+  --
+  house_id : UUID [FK -> house.house_id]
+  name : String
+  description : String
+  created_at : DateTime
+}
+
+' ---------- Сущность: DeviceType ----------
+' Справочник типов устройств (например, «Термодатчик», «Реле отопления», «Умная лампа», «Камера наблюдения» и т. д.)
+entity "DeviceType" as device_type {
+  + device_type_id : UUID [PK]
+  --
+  name : String
+  description : String
+}
+
+' ---------- Сущность: Device ----------
+' Конкретное физическое устройство в доме (например, термодатчик с серийным номером X123)
+entity "Device" as device {
+  + device_id : UUID [PK]
+  --
+  device_type_id : UUID [FK -> device_type.device_type_id]
+  module_id : UUID [FK -> module.module_id]
+  serial_number : String
+  status : String
+  created_at : DateTime
+}
+
+' ---------- Сущность: TelemetryData ----------
+' Запись телеметрии/события, которую генерирует устройство (температура, состояние «вкл/выкл» и т. д.)
+entity "TelemetryData" as telemetry {
+  + telemetry_id : UUID [PK]
+  --
+  device_id : UUID [FK -> device.device_id]
+  timestamp : DateTime
+  data_value : Float
+  data_type : String
+}
+
+' ---------- Связи (Relationship) ----------
+
+' User (1) -- (M) House
+user ||--|{ house : "1:N"
+
+' House (1) -- (M) Module
+house ||--|{ module : "1:N"
+
+' Module (1) -- (M) Device
+module ||--|{ device : "1:N"
+
+' DeviceType (1) -- (M) Device
+device_type ||--|{ device : "1:N"
+
+' Device (1) -- (M) TelemetryData
+device ||--|{ telemetry : "1:N"
+
+@enduml

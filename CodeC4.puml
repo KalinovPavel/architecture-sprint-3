@@ -1,0 +1,37 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+
+
+' Основной класс бизнес-логики отопления.
+class HeatingLogic {
+  - HeatingRepository heatingRepository
+  - TemperatureSensorAdapter sensorAdapter
+  + updateHeatingState()
+  + applySchedule(schedule: HeatingSchedule)
+}
+
+' Cущность расписания/плана отопления.
+class HeatingSchedule {
+  - Long id
+  - LocalTime startTime
+  - LocalTime endTime
+  - float targetTemperature
+}
+
+' Интерфейс к базе данных (DAO/репозиторий).
+class HeatingRepository {
+  + findScheduleById(id: Long): HeatingSchedule
+  + saveSchedule(schedule: HeatingSchedule): void
+}
+
+' Внешний адаптер для чтения текущей температуры.
+class TemperatureSensorAdapter {
+  + getCurrentTemperature(): float
+}
+
+HeatingLogic --> HeatingSchedule : uses
+HeatingLogic --> HeatingRepository : uses
+HeatingLogic --> TemperatureSensorAdapter : uses
+
+@enduml
